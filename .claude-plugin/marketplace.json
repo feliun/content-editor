@@ -1,0 +1,6 @@
+{
+  "name": "content-editor",
+  "plugins": [
+    { "name": "content-editor", "source": "./", "version": "1.0.0" }
+  ]
+}

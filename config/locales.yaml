@@ -1,0 +1,27 @@
+# Content Editor — day-name translations
+#
+# The plugin's commands and provider scripts use English short day codes
+# (Mon..Fri) internally. At render time, they translate the codes to the
+# language configured in content-settings.yaml using the maps below.
+#
+# Built-in locales: en, es, pt. To support a new language, add an entry
+# whose key matches the `language:` value in content-settings.yaml.
+#
+# Each entry has:
+#   days:  Monday..Sunday in long form
+#   short: Mon..Sun (or equivalent) in short form
+#
+# Index 0 is always Monday. Saturday and Sunday are included for analytics
+# day-of-week labelling, even though the default working-days list is Mon-Fri.
+
+en:
+  days:  [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+  short: [Mon, Tue, Wed, Thu, Fri, Sat, Sun]
+
+es:
+  days:  [Lunes, Martes, Miércoles, Jueves, Viernes, Sábado, Domingo]
+  short: [Lun, Mar, Mié, Jue, Vie, Sáb, Dom]
+
+pt:
+  days:  [Segunda, Terça, Quarta, Quinta, Sexta, Sábado, Domingo]
+  short: [Seg, Ter, Qua, Qui, Sex, Sáb, Dom]

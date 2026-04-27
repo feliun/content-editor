@@ -1,0 +1,181 @@
+# =============================================================================
+# Content Editor — Config Manifest
+# =============================================================================
+#
+# Central registry of every config file the content-editor commands depend on.
+# The `manifest-resolver` skill reads this file before any content-editor:*
+# command runs, locates each config, and returns the resolved path.
+#
+# PATH TOKENS
+# -----------
+# - `$WORKSPACE`            -> the user's working directory (the repo or vault
+#                              they invoked Claude Code in)
+# - `~`                     -> the user's home directory
+# - bare path (no token)    -> resolved against the plugin root (this repo)
+#
+# Each config key lists `paths` in priority order. The resolver returns the
+# first path that exists. Required configs that resolve nowhere are flagged
+# as MISSING; optional configs are silently skipped.
+#
+# RESOLUTION LAYERS (typical reference file)
+# ------------------------------------------
+# 1. $WORKSPACE/.content-editor/<key>.md           (per-workspace override,
+#                                                   gitignored)
+# 2. $WORKSPACE/system/memory/principles/<orig>.md (Obsidian "principles" vault
+#                                                   convention; original-cased
+#                                                   filename so existing vaults
+#                                                   resolve without renames)
+# 3. $WORKSPACE/references/<key>.md                (generic workspace
+#                                                   references)
+# 4. references/<key>.md                           (plugin defaults, the
+#                                                   fictional "Signal" examples
+#                                                   shipped with the repo)
+# 5. ~/.claude/content-editor/<key>.md             (user-wide fallback)
+#
+# =============================================================================
+
+content-editor:
+  # ---------------------------------------------------------------------------
+  # Reference files (markdown)
+  # ---------------------------------------------------------------------------
+
+  writing-style:
+    description: "Voice DNA — tone, sentence patterns, formatting rules, banned phrases"
+    paths:
+      - $WORKSPACE/.content-editor/writing-style.md
+      - $WORKSPACE/system/memory/principles/Writing style.md
+      - $WORKSPACE/references/writing-style.md
+      - references/writing-style.md
+      - ~/.claude/content-editor/writing-style.md
+    required: true
+    format: markdown
+
+  business-writing-guidelines:
+    description: "Craft principles — stickiness, structure, remarkability, editing"
+    paths:
+      - $WORKSPACE/.content-editor/business-writing-guidelines.md
+      - $WORKSPACE/system/memory/principles/Business Writing guidelines.md
+      - $WORKSPACE/references/business-writing-guidelines.md
+      - references/business-writing-guidelines.md
+      - ~/.claude/content-editor/business-writing-guidelines.md
+    required: true
+    format: markdown
+
+  linkedin-strategy:
+    description: "LinkedIn content strategy — audience, pillars, weekly schedule, quality filters"
+    paths:
+      - $WORKSPACE/.content-editor/linkedin-strategy.md
+      - $WORKSPACE/system/memory/principles/LinkedIn Content Strategy Guide.md
+      - $WORKSPACE/references/linkedin-strategy.md
+      - references/linkedin-strategy.md
+      - ~/.claude/content-editor/linkedin-strategy.md
+    required: true
+    format: markdown
+
+  newsletter-strategy:
+    description: "Newsletter content strategy — audience, pillars, edition structure, SEO"
+    paths:
+      - $WORKSPACE/.content-editor/newsletter-strategy.md
+      - $WORKSPACE/system/memory/principles/Newsletter Content Strategy Guide.md
+      - $WORKSPACE/references/newsletter-strategy.md
+      - references/newsletter-strategy.md
+      - ~/.claude/content-editor/newsletter-strategy.md
+    required: true
+    format: markdown
+
+  author-profile:
+    description: "Author's background, audience, positioning context"
+    paths:
+      - $WORKSPACE/.content-editor/author-profile.md
+      - $WORKSPACE/system/memory/principles/Who am I.md
+      - $WORKSPACE/references/author-profile.md
+      - references/author-profile.md
+      - ~/.claude/content-editor/author-profile.md
+    required: false
+    format: markdown
+
+  author-values:
+    description: "Author's core philosophy, contrarian positions, content pillars"
+    paths:
+      - $WORKSPACE/.content-editor/author-values.md
+      - $WORKSPACE/system/memory/principles/My values.md
+      - $WORKSPACE/references/author-values.md
+      - references/author-values.md
+      - ~/.claude/content-editor/author-values.md
+    required: false
+    format: markdown
+
+  author-thinking-style:
+    description: "Author's reasoning style, biases, decision frameworks"
+    paths:
+      - $WORKSPACE/.content-editor/author-thinking-style.md
+      - $WORKSPACE/system/memory/principles/How to think with me.md
+      - $WORKSPACE/references/author-thinking-style.md
+      - references/author-thinking-style.md
+      - ~/.claude/content-editor/author-thinking-style.md
+    required: false
+    format: markdown
+
+  # ---------------------------------------------------------------------------
+  # Wiki source (directory of source notes)
+  # ---------------------------------------------------------------------------
+
+  wiki:
+    description: "Directory of source notes the commands draw from"
+    paths:
+      - $WORKSPACE/wiki
+      - $WORKSPACE/notes
+      - ~/.claude/content-editor/wiki
+    required: false
+    format: directory
+    note: "Frontmatter convention: status=draft (LinkedIn sources), type=content + tag=newsletter (newsletter sources)."
+
+  # ---------------------------------------------------------------------------
+  # Outputs
+  # ---------------------------------------------------------------------------
+
+  outputs-dir:
+    description: "Directory for generated content files (LinkedIn batches, newsletters)"
+    paths:
+      - $WORKSPACE/outputs/content
+      - outputs/content
+    required: true
+    format: directory
+
+  analytics-output:
+    description: "Analytics JSON written by the analytics provider"
+    paths:
+      - $WORKSPACE/outputs/analytics.json
+      - outputs/analytics.json
+    required: false
+    format: json
+
+  # ---------------------------------------------------------------------------
+  # Settings (yaml)
+  # ---------------------------------------------------------------------------
+
+  content-settings:
+    description: "Output language, schedule, length targets, quality gate"
+    paths:
+      - $WORKSPACE/.content-editor/content-settings.yaml
+      - config/content-settings.yaml
+      - ~/.claude/content-editor/content-settings.yaml
+    required: false
+    format: yaml
+
+  publishing:
+    description: "Publishing provider and schedule settings"
+    paths:
+      - $WORKSPACE/.content-editor/publishing.yaml
+      - config/publishing.yaml
+      - ~/.claude/content-editor/publishing.yaml
+    required: false
+    format: yaml
+
+  locales:
+    description: "Day-name translations per language (en, es, pt by default)"
+    paths:
+      - $WORKSPACE/.content-editor/locales.yaml
+      - config/locales.yaml
+    required: true
+    format: yaml

@@ -1,0 +1,27 @@
+# Workspace-local private config (Taplio session, screenshots, user overrides
+# placed under $WORKSPACE/.content-editor/ per publishing.yaml.example)
+.content-editor/
+
+# Generated content
+outputs/
+
+# Provider session/credential files and artifacts
+providers/*/node_modules/
+providers/*/*.session.json
+providers/*/screenshots/
+providers/*/.screenshots/
+
+# Taplio — explicit guards on top of the provider glob and .content-editor/,
+# in case sessions or screenshots are ever written to a non-standard
+# location (CWD, scripts/, etc.).
+taplio-session.json
+taplio-screenshots/
+**/taplio-session.json
+**/taplio-screenshots/
+
+# Node
+node_modules/
+package-lock.json
+
+# macOS
+.DS_Store
