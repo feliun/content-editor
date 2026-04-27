@@ -1,5 +1,9 @@
 {
   "name": "content-editor",
+  "owner": {
+    "name": "Felipe Polo",
+    "email": "felipe.polo@orbitant.com"
+  },
   "plugins": [
     { "name": "content-editor", "source": "./", "version": "1.0.0" }
   ]
