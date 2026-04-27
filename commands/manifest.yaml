@@ -145,8 +145,9 @@ content-editor:
   analytics-output:
     description: "Analytics JSON written by the analytics provider"
     paths:
-      - $WORKSPACE/outputs/analytics.json
-      - outputs/analytics.json
+      - $WORKSPACE/.content-editor/analytics.json
+      - $WORKSPACE/outputs/content/analytics.json
+      - outputs/content/analytics.json
     required: false
     format: json
 

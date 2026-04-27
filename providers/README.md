@@ -71,7 +71,7 @@ Both scripts must emit one JSON object per line on `stdout`. Logs and progress m
 
 ### `analytics.mjs` output
 
-`analytics.mjs` writes the structured metrics file to the path supplied in the config (default: `<workspace>/outputs/analytics.json`) and emits a final summary line:
+`analytics.mjs` writes the structured metrics file to the path supplied in the config (default: `<workspace>/outputs/content/analytics.json`) and emits a final summary line:
 
 ```json
 {"summary": {"total_posts": 28, "avg_engagement_rate": 3.1, "best_day": "Tuesday"}}

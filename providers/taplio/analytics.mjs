@@ -49,7 +49,7 @@ const screenshotsDir = absolutise(
 mkdirSync(screenshotsDir, { recursive: true });
 
 const outputPath = absolutise(
-  config.analytics_output || join(workspace, 'outputs/analytics.json'),
+  config.analytics_output || join(workspace, 'outputs/content/analytics.json'),
   workspace
 );
 

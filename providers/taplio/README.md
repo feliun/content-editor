@@ -55,7 +55,7 @@ Paths are resolved relative to `$WORKSPACE`. The generic `skills/publish.md` ski
 | Script | Purpose |
 |--------|---------|
 | `publish.mjs <content-file> <config.json>` | Parse the LinkedIn content file, schedule each day's post in Taplio at the configured time. |
-| `analytics.mjs <config.json>` | Scrape the analytics dashboard, write structured JSON to `outputs/analytics.json`, print a summary line on stdout. |
+| `analytics.mjs <config.json>` | Scrape the analytics dashboard, write structured JSON to the configured `analytics-output` path (default `outputs/content/analytics.json`), print a summary line on stdout. |
 | `auth.mjs <config.json>` | Interactive login, persists the Playwright session. |
 | `verify.mjs <config.json>` | Smoke test: opens the schedule view and saves screenshots. |
 
