@@ -89,7 +89,9 @@ If any of those is missing, report the gap clearly and exit gracefully — never
 
    Tolerate non-JSON lines on stdout by ignoring them (they should never happen, but the skill must not crash on a stray log line).
 
-7. **Update source notes.** If the content file references wiki notes via `[[wikilinks]]` and the `obsidian:obsidian-cli` skill is available, mark each successfully scheduled source note's frontmatter `status: published`. Skip wikilinks that don't resolve to a real note. Skip silently if the obsidian CLI is missing.
+7. **Update source notes and batch file.** If the content file references wiki notes via `[[wikilinks]]` and the `obsidian:obsidian-cli` skill is available, mark each successfully scheduled source note's frontmatter `status: published`. Skip wikilinks that don't resolve to a real note. Skip silently if the obsidian CLI is missing.
+
+   Also flip the **content file's own** frontmatter `status` to `published` when all posts scheduled successfully (zero failures). On partial success, leave it as `draft` so the user can re-dispatch the failed days without losing track of which batches are fully shipped. Edit the file in place — keep all other frontmatter fields untouched.
 
 8. **Report.** Render a provider-agnostic summary block:
 

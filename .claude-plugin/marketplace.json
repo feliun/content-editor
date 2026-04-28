@@ -5,6 +5,6 @@
     "email": "felipe.polo@orbitant.com"
   },
   "plugins": [
-    { "name": "content-editor", "source": "./", "version": "1.0.1" }
+    { "name": "content-editor", "source": "./", "version": "1.1.0" }
   ]
 }
