@@ -1,6 +1,6 @@
 {
   "name": "content-editor",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A configurable writing partner for Claude Code. Generates and reviews LinkedIn and newsletter content against your own voice and craft references.",
   "license": "MIT"
 }

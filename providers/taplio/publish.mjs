@@ -184,52 +184,19 @@ function parsePosts(md) {
 // intercept clicks. Best-effort dismissal: Escape, then close-button clicks.
 // ---------------------------------------------------------------------------
 
+// Taplio renders a Pro-plan upsell modal ~5-8 seconds after dashboard load.
+// The close button is `button[aria-label="Close"]` inside `.chakra-modal__content`.
+// We wait up to 12s for it to appear; if it does, click it. If it never shows
+// (some sessions skip the upsell), proceed without action.
 async function dismissBlockingModals(page) {
-  await page.keyboard.press('Escape').catch(() => {});
-  await page.waitForTimeout(300);
-
-  const closeSelectors = [
-    'button[aria-label="Close"]',
-    'button[aria-label="close"]',
-    '[role="dialog"] button[aria-label*="lose" i]',
-    '.chakra-modal__close-btn',
-    'button.chakra-modal__close-btn',
-  ];
-  for (const sel of closeSelectors) {
-    const btn = page.locator(sel).first();
-    try {
-      if ((await btn.count()) > 0 && (await btn.isVisible())) {
-        await btn.click({ timeout: 1500, force: true });
-        await page.waitForTimeout(300);
-      }
-    } catch {}
+  try {
+    const closeBtn = page.locator('.chakra-modal__close-btn, button[aria-label="Close"]').first();
+    await closeBtn.waitFor({ state: 'visible', timeout: 12000 });
+    await closeBtn.click({ timeout: 3000, force: true });
+    await page.waitForTimeout(800);
+  } catch {
+    // Modal never appeared, or already dismissed — fine.
   }
-
-  // Brute-force: drop any upsell/promo overlay still in the DOM. Targets only
-  // dialogs whose text matches the known Taplio upsell fingerprint, so the
-  // legitimate scheduling modals (which appear AFTER "Write a Post") survive.
-  await page.evaluate(() => {
-    const PROMO_RE = /automate your|connection requests|upgrade instantly|pro plan|lifetime discount/i;
-    const candidates = document.querySelectorAll(
-      '[role="dialog"], .chakra-modal__content, .chakra-modal__overlay, [class*="modal" i], [class*="overlay" i], [class*="backdrop" i]'
-    );
-    candidates.forEach(el => {
-      const text = (el.textContent || '').trim();
-      if (PROMO_RE.test(text)) {
-        let target = el;
-        for (let i = 0; i < 6 && target.parentElement; i++) {
-          if (target.parentElement.matches('[class*="overlay" i], [class*="modal" i], .chakra-portal, [role="presentation"]')) {
-            target = target.parentElement;
-          } else break;
-        }
-        target.remove();
-      }
-    });
-    // Re-enable scrolling if Chakra locked it
-    document.body.style.overflow = '';
-    document.documentElement.style.overflow = '';
-  }).catch(() => {});
-  await page.waitForTimeout(300);
 }
 
 // ---------------------------------------------------------------------------
