@@ -185,30 +185,51 @@ function parsePosts(md) {
 // ---------------------------------------------------------------------------
 
 async function dismissBlockingModals(page) {
-  for (let i = 0; i < 3; i++) {
-    let dismissed = false;
-    await page.keyboard.press('Escape').catch(() => {});
-    await page.waitForTimeout(300);
+  await page.keyboard.press('Escape').catch(() => {});
+  await page.waitForTimeout(300);
 
-    const closeSelectors = [
-      'button[aria-label="Close"]',
-      'button[aria-label="close"]',
-      '[role="dialog"] button[aria-label*="lose" i]',
-      '.chakra-modal__close-btn',
-      'button.chakra-modal__close-btn',
-    ];
-    for (const sel of closeSelectors) {
-      const btn = page.locator(sel).first();
-      if (await btn.count().catch(() => 0)) {
-        if (await btn.isVisible().catch(() => false)) {
-          await btn.click({ timeout: 1500, force: true }).catch(() => {});
-          await page.waitForTimeout(300);
-          dismissed = true;
-        }
+  const closeSelectors = [
+    'button[aria-label="Close"]',
+    'button[aria-label="close"]',
+    '[role="dialog"] button[aria-label*="lose" i]',
+    '.chakra-modal__close-btn',
+    'button.chakra-modal__close-btn',
+  ];
+  for (const sel of closeSelectors) {
+    const btn = page.locator(sel).first();
+    try {
+      if ((await btn.count()) > 0 && (await btn.isVisible())) {
+        await btn.click({ timeout: 1500, force: true });
+        await page.waitForTimeout(300);
       }
-    }
-    if (!dismissed) break;
+    } catch {}
   }
+
+  // Brute-force: drop any upsell/promo overlay still in the DOM. Targets only
+  // dialogs whose text matches the known Taplio upsell fingerprint, so the
+  // legitimate scheduling modals (which appear AFTER "Write a Post") survive.
+  await page.evaluate(() => {
+    const PROMO_RE = /automate your|connection requests|upgrade instantly|pro plan|lifetime discount/i;
+    const candidates = document.querySelectorAll(
+      '[role="dialog"], .chakra-modal__content, .chakra-modal__overlay, [class*="modal" i], [class*="overlay" i], [class*="backdrop" i]'
+    );
+    candidates.forEach(el => {
+      const text = (el.textContent || '').trim();
+      if (PROMO_RE.test(text)) {
+        let target = el;
+        for (let i = 0; i < 6 && target.parentElement; i++) {
+          if (target.parentElement.matches('[class*="overlay" i], [class*="modal" i], .chakra-portal, [role="presentation"]')) {
+            target = target.parentElement;
+          } else break;
+        }
+        target.remove();
+      }
+    });
+    // Re-enable scrolling if Chakra locked it
+    document.body.style.overflow = '';
+    document.documentElement.style.overflow = '';
+  }).catch(() => {});
+  await page.waitForTimeout(300);
 }
 
 // ---------------------------------------------------------------------------
