@@ -180,6 +180,38 @@ function parsePosts(md) {
 }
 
 // ---------------------------------------------------------------------------
+// Modal dismissal — Taplio occasionally shows promo/upsell overlays that
+// intercept clicks. Best-effort dismissal: Escape, then close-button clicks.
+// ---------------------------------------------------------------------------
+
+async function dismissBlockingModals(page) {
+  for (let i = 0; i < 3; i++) {
+    let dismissed = false;
+    await page.keyboard.press('Escape').catch(() => {});
+    await page.waitForTimeout(300);
+
+    const closeSelectors = [
+      'button[aria-label="Close"]',
+      'button[aria-label="close"]',
+      '[role="dialog"] button[aria-label*="lose" i]',
+      '.chakra-modal__close-btn',
+      'button.chakra-modal__close-btn',
+    ];
+    for (const sel of closeSelectors) {
+      const btn = page.locator(sel).first();
+      if (await btn.count().catch(() => 0)) {
+        if (await btn.isVisible().catch(() => false)) {
+          await btn.click({ timeout: 1500, force: true }).catch(() => {});
+          await page.waitForTimeout(300);
+          dismissed = true;
+        }
+      }
+    }
+    if (!dismissed) break;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // stdout helpers
 // ---------------------------------------------------------------------------
 
@@ -232,6 +264,7 @@ for (const post of posts) {
       throw new Error('session expired');
     }
     await page.waitForTimeout(3000);
+    await dismissBlockingModals(page);
     await page.locator('button:has-text("Write a Post")').first().click();
     await page.waitForTimeout(3000);
 
