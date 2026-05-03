@@ -130,6 +130,26 @@ content-editor:
     format: directory
     note: "Frontmatter convention: status=draft (LinkedIn sources), type=content + tag=newsletter (newsletter sources)."
 
+  linkedin-source-pool:
+    description: "Directory of wiki notes scanned by /create-linkedin-content as publishing candidates (status filtered via content-settings.linkedin.source_status)"
+    paths:
+      - $WORKSPACE/.content-editor/linkedin-source-pool
+      - $WORKSPACE/wiki/content
+      - $WORKSPACE/notes/content
+      - ~/.claude/content-editor/linkedin-source-pool
+    required: false
+    format: directory
+
+  tweets-archive:
+    description: "Directory of tweet captures used as LinkedIn publishing candidates (lookback window via content-settings.linkedin.tweets_lookback_days)"
+    paths:
+      - $WORKSPACE/.content-editor/tweets-archive
+      - $WORKSPACE/records/tweets
+      - $WORKSPACE/tweets
+      - ~/.claude/content-editor/tweets-archive
+    required: false
+    format: directory
+
   # ---------------------------------------------------------------------------
   # Outputs
   # ---------------------------------------------------------------------------

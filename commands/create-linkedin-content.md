@@ -16,9 +16,11 @@ Build a full week of LinkedIn content (Monday through Friday) following the reso
    - `business-writing-guidelines` (required) — craft principles
    - `linkedin-strategy` (required) — audience, pillars, weekly schedule, quality filters
    - `author-profile`, `author-values`, `author-thinking-style` (optional, but use them when resolved)
-   - `wiki` (optional) — source notes
+   - `wiki` (optional) — fallback source notes pool
+   - `linkedin-source-pool` (optional) — directory of wiki notes scanned in step 4 for publishing candidates
+   - `tweets-archive` (optional) — directory of tweet captures scanned in step 4 for publishing candidates
    - `outputs-dir` (required) — where to save the file
-   - `content-settings` (optional) — for `language` and `linkedin.weekly_schedule`
+   - `content-settings` (optional) — for `language`, `linkedin.weekly_schedule`, `linkedin.source_status`, `linkedin.tweets_lookback_days`
    - `locales` (required) — day-name translations
    - `analytics-output` (optional) — last analytics run
 
@@ -39,13 +41,18 @@ Build a full week of LinkedIn content (Monday through Friday) following the reso
 
 3. **Read the strategy and voice references.** Read the resolved `linkedin-strategy` in full. Read the resolved `writing-style` in full. Optional: read `author-profile`, `author-values`, and `author-thinking-style` if resolved.
 
-4. **Scan the wiki.** If the `wiki` config resolved, scan it for source notes. Filter by frontmatter:
-   - **status:** `draft` only. Never use `status: published` or `status: ready`.
-   - Optionally narrow by `tag: linkedin` if the user's wiki uses tags.
+4. **Propose publishing candidates and wait for user confirmation.** Before generating any content, gather source candidates from the two configured directories and present them to the user for explicit approval:
 
-   If fewer than `linkedin.min_source_notes` (default 5) draft notes are found, **stop** and report the count. Ask the user whether to:
-   - Proceed with what's available, filling gaps with original ideas, or
-   - Wait until more drafts are added.
+   - **Recent tweets** from the resolved `tweets-archive` directory. Include only files whose mtime (or `created` frontmatter field, if present) falls within the last `linkedin.tweets_lookback_days` days (default `7`) relative to today. Skip silently if `tweets-archive` did not resolve.
+   - **Ready-status wiki notes** from the resolved `linkedin-source-pool` directory. Read frontmatter from each note and include only those whose `status` field equals `linkedin.source_status` from `content-settings.yaml` (default `ready`). Skip silently if `linkedin-source-pool` did not resolve.
+
+   Present the candidates as a numbered list, grouped by source, with a one-line summary per item (title or first non-empty line). Then **stop and ask the user** which candidates to use. Acceptable user responses:
+   - A subset of numbers / titles to publish from.
+   - "All" to use everything proposed.
+   - A request to add original ideas to fill gaps.
+   - A request to abort and wait for more material.
+
+   Do **not** proceed to step 5 until the user has explicitly confirmed the publishing candidates. If the combined candidate set is empty (both directories unresolved or empty after filtering), surface that fact and ask whether to generate from original ideas only or abort.
 
 5. **Optional: check the newsletter archive.** If `newsletter.external_archive_url` is set in `content-settings.yaml`, fetch the URL to ground Friday's BOFU promo. If unreachable, fall back to the most recent file in `outputs-dir` matching `Newsletter-*.md`. If neither is available, write Friday's BOFU based on known newsletter themes and flag with `⚠️`.
 
@@ -65,8 +72,6 @@ Build a full week of LinkedIn content (Monday through Friday) following the reso
    - Day label (in the configured language) and stage (TOFU / MOFU / BOFU).
    - Post title or theme (internal reference, not for publication).
    - Main ideas to include.
-   - 3 hook alternatives.
-   - 3 close alternatives.
    - **Main content** — the publishable post body.
    - Source reference (wikilink, external URL, or "Original").
 
@@ -92,7 +97,7 @@ Build a full week of LinkedIn content (Monday through Friday) following the reso
 
 ## Resilience
 
-- **Insufficient draft content** → stop and prompt the user (step 4). Only proceed with gaps if the user explicitly approves.
+- **No publishing candidates available** → step 4 surfaces an empty candidate list to the user. Only proceed (with original ideas or abort) per explicit user instruction.
 - **Newsletter archive unreachable** → write Friday's BOFU from known themes, flag `⚠️`.
 - **Idea already published** → check existing `<outputs-dir>/Linkedin-*.md` for duplicates. Never reuse a published idea.
 - **Post fails quality filters** → rework before including.

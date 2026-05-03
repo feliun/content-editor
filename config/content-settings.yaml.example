@@ -34,6 +34,16 @@ linkedin:
   # If fewer are found, the command stops and asks the user.
   min_source_notes: 5
 
+  # Frontmatter `status` value treated as "publishing candidate" when
+  # /create-linkedin-content scans `linkedin-source-pool`. Step 4 surfaces
+  # these notes to the user for explicit confirmation before generation.
+  source_status: ready
+
+  # Lookback window (in days) applied to the `tweets-archive` directory when
+  # /create-linkedin-content surfaces tweet candidates in step 4. Filtering
+  # uses file mtime, falling back to a `created` field in frontmatter.
+  tweets_lookback_days: 7
+
 # Newsletter.
 newsletter:
   target_word_count: [1000, 2000]
