@@ -119,6 +119,26 @@ function nextOccurrenceFromTomorrow(targetIdx) {
   return result;
 }
 
+// When the section heading carries a day-number ("Miércoles 13 — ..."),
+// resolve to the calendar date matching BOTH the weekday and the day-number.
+// Lets `Miércoles 6` and `Miércoles 13` map to distinct calendar dates.
+function nextOccurrenceWithDayNumber(targetIdx, dayNumber) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const targetWeekday = JS_WEEKDAY[targetIdx];
+  for (let i = 0; i < 90; i++) {
+    const candidate = new Date(today);
+    candidate.setDate(today.getDate() + i);
+    if (
+      candidate.getDay() === targetWeekday &&
+      candidate.getDate() === dayNumber
+    ) {
+      return candidate;
+    }
+  }
+  return nextOccurrenceFromTomorrow(targetIdx);
+}
+
 function combineDateAndTime(date, hhmm) {
   const [hh, mm] = hhmm.split(':').map(Number);
   const out = new Date(date);
@@ -155,7 +175,13 @@ function parsePosts(md) {
     const head = firstLine.split(/[^\p{L}]+/u, 1)[0];
     const idx = DAY_INDEX[normalise(head)];
     if (idx === undefined) continue;
-    const dateObj = nextOccurrenceFromTomorrow(idx);
+    // Optional day-number after the day name lets multiple posts on the same
+    // weekday (e.g. two Wednesdays) resolve to distinct calendar dates.
+    const numMatch = firstLine.match(/^[\p{L}]+\s+(\d{1,2})\b/u);
+    const dayNumber = numMatch ? parseInt(numMatch[1], 10) : null;
+    const dateObj = dayNumber !== null
+      ? nextOccurrenceWithDayNumber(idx, dayNumber)
+      : nextOccurrenceFromTomorrow(idx);
 
     // Rich format: only the "### ✏️ Main content" subsection is publishable.
     const mainHeadingRe = /^###\s+✏️\s*Main content/m;
@@ -256,11 +282,76 @@ for (const post of posts) {
     await page.locator('button:has-text("Write a Post")').first().click();
     await page.waitForTimeout(3000);
 
-    const textarea = page.locator(
-      'textarea[placeholder="Write your LinkedIn post here..."]'
+    // The composer modal contains two contenteditable rich editors: a
+    // ProseMirror/Remirror input on the AI-Assist panel (left) and the real
+    // post composer on the right. The post composer has the unique class
+    // `composer-lexical-content-editable`. Target it explicitly; fall back to
+    // the legacy <textarea> selector for older taplio builds.
+    let editor = page.locator('div.composer-lexical-content-editable').first();
+    if (await editor.count() === 0) {
+      editor = page.locator(
+        'textarea[placeholder="Write your LinkedIn post here..."]'
+      ).first();
+    }
+    await editor.waitFor({ state: 'visible', timeout: 10000 });
+    // Real <textarea>/<input> can take the whole string at once with a value
+    // setter. Lexical contenteditables need paragraph-aware insertion: split
+    // on blank lines (\n\n+), press Enter between blocks; split single \n
+    // within a block, press Shift+Enter for soft breaks. Plain literal \n in
+    // execCommand text gets stripped or coerced into a soft break, which
+    // collapses LinkedIn formatting.
+    const editorTag = await editor.evaluate(el => el.tagName);
+    let inserted;
+    if (editorTag === 'TEXTAREA' || editorTag === 'INPUT') {
+      inserted = await editor.evaluate((el, content) => {
+        const setter = Object.getOwnPropertyDescriptor(
+          el.tagName === 'TEXTAREA'
+            ? window.HTMLTextAreaElement.prototype
+            : window.HTMLInputElement.prototype,
+          'value'
+        ).set;
+        setter.call(el, content);
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        return 'value-setter';
+      }, post.content);
+    } else {
+      // Focus once; subsequent execCommand and keyboard.press calls inherit
+      // it. Walk the content line-by-line; each \n in source → one Enter.
+      // This preserves blank-line gaps: `Para1\n\nPara2` becomes 2 Enters,
+      // which creates an empty paragraph between Para1 and Para2 — the
+      // visual blank-line layout LinkedIn renders.
+      await editor.evaluate(el => el.focus());
+      await page.waitForTimeout(200);
+      const lines = post.content.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (i > 0) await page.keyboard.press('Enter');
+        if (lines[i].length > 0) {
+          await editor.evaluate((el, txt) => {
+            if (document.activeElement !== el) el.focus();
+            document.execCommand('insertText', false, txt);
+          }, lines[i]);
+        }
+      }
+      inserted = 'execCommand-line';
+    }
+    log(`   📝 ${post.shortLabel} insertion: ${inserted}`);
+    await page.waitForTimeout(500);
+    // Verify via taplio's own character counter — the same value taplio
+    // reads when deciding whether the post is empty.
+    const counterText = await page
+      .locator('text=/\\d+\\/3000/')
+      .first()
+      .textContent({ timeout: 3000 })
+      .catch(() => '0/3000');
+    const charCount = parseInt(
+      (counterText.match(/^(\d+)\//) || [])[1] || '0', 10
     );
-    await textarea.fill(post.content);
-    await page.waitForTimeout(1000);
+    if (charCount < 10) {
+      throw new Error(
+        `text insertion failed — counter shows "${counterText}", expected ~${post.content.length} chars`
+      );
+    }
+    await page.waitForTimeout(500);
 
     await page.locator('button[aria-label="More scheduling options"]').click();
     await page.waitForTimeout(1500);
@@ -301,7 +392,9 @@ for (const post of posts) {
     await page.waitForTimeout(3000);
 
     const editorOpen = await page
-      .locator('textarea[placeholder="Write your LinkedIn post here..."]')
+      .locator(
+        'div.composer-lexical-content-editable, textarea[placeholder="Write your LinkedIn post here..."]'
+      )
       .count();
 
     if (editorOpen === 0) {
