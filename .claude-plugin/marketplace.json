@@ -2,9 +2,9 @@
   "name": "content-editor",
   "owner": {
     "name": "Felipe Polo",
-    "email": "felipe.polo@orbitant.com"
+    "email": "feliun@users.noreply.github.com"
   },
   "plugins": [
-    { "name": "content-editor", "source": "./", "version": "1.3.0" }
+    { "name": "content-editor", "source": "./", "version": "1.3.1" }
   ]
 }

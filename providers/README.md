@@ -33,7 +33,7 @@ node providers/<name>/analytics.mjs                <config.json>
   "language": "en",
   "schedule": {
     "default_time": "09:15",
-    "timezone": "America/Bogota",
+    "timezone": "UTC",
     "working_days": ["Mon", "Tue", "Wed", "Thu", "Fri"]
   },
   "locales": {

@@ -1,0 +1,61 @@
+# Content Editor — content settings
+#
+# Copy this file to one of the resolution paths to override the plugin defaults:
+#   - $WORKSPACE/.content-editor/content-settings.yaml   (per-workspace, gitignored)
+#   - ~/.claude/content-editor/content-settings.yaml     (user-wide fallback)
+#
+# Resolution order is defined in commands/manifest.yaml under `content-settings`.
+# This example file is also valid as the plugin's default (config/content-settings.yaml).
+
+# Output language for generated content. Drives day-name translation (via
+# locales.yaml) and the "generate in {language}" instruction passed to the LLM.
+# Built-in locales: en, es, pt. Other values pass through; the locale arrays
+# from locales.yaml are used when present.
+language: en
+
+# LinkedIn weekly schedule.
+# Keys are always the English short day codes (Mon..Fri) regardless of the
+# output language. Commands translate them at render time via locales.yaml.
+linkedin:
+  weekly_schedule:
+    Mon: TOFU      # Top-of-funnel: wide curiosity
+    Tue: MOFU      # Middle-of-funnel: depth
+    Wed: MOFU
+    Thu: MOFU
+    Fri: BOFU      # Bottom-of-funnel: drive to newsletter / owned channel
+
+  # File format used by /create-linkedin-content output.
+  #   "clean" -> H1 day headers, plain post bodies.
+  #   "rich"  -> H2 day headers + a "### ✏️ Main content" section per day,
+  #              plus optional ideas, hooks, alternatives.
+  post_format: clean
+
+  # Minimum number of `status: draft` wiki notes required before generating.
+  # If fewer are found, the command stops and asks the user.
+  min_source_notes: 5
+
+  # Frontmatter `status` value treated as "publishing candidate" when
+  # /create-linkedin-content scans `linkedin-source-pool`. Step 4 surfaces
+  # these notes to the user for explicit confirmation before generation.
+  source_status: ready
+
+  # Lookback window (in days) applied to the `tweets-archive` directory when
+  # /create-linkedin-content surfaces tweet candidates in step 4. Filtering
+  # uses file mtime, falling back to a `created` field in frontmatter.
+  tweets_lookback_days: 7
+
+# Newsletter.
+newsletter:
+  target_word_count: [1000, 2000]
+  target_read_minutes: [5, 10]
+
+  # Optional URL of the newsletter archive (Substack, beehiiv, Ghost, owned).
+  # Used for Friday's BOFU LinkedIn promo. Leave null to fall back to the
+  # most recent file in outputs-dir matching Newsletter-*.md.
+  external_archive_url: null
+
+# Quality gate. Drafts scoring below `min_score` on the content-reviewer
+# agent's overall scale are rewritten and re-reviewed before shipping.
+review:
+  min_score: 7
+  dimensions: 8

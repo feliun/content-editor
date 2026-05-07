@@ -40,7 +40,7 @@ Set `provider: taplio` in `$WORKSPACE/.content-editor/publishing.yaml`:
 provider: taplio
 schedule:
   default_time: "09:15"
-  timezone: "America/Bogota"
+  timezone: "UTC"
   working_days: [Mon, Tue, Wed, Thu, Fri]
 
 taplio:

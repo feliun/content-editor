@@ -20,6 +20,8 @@ cd content-editor
 
 The plugin works as-is with the example references shipped in `references/` (a fictional persona named "Signal"). To make it sound like *you*, override the reference files via one of the resolution layers (see [Configuration](#configuration)).
 
+> **First-time setup.** Before generating any content, override at minimum `references/writing-style.md` and either `references/linkedin-strategy.md` or `references/newsletter-strategy.md` with your own voice and pillars. The shipped "Signal" persona is a fictional engineering-leader example — it will dominate output otherwise. The cleanest path is to drop your replacements into `$WORKSPACE/.content-editor/` (per-workspace) or `~/.claude/content-editor/` (user-wide); both layers win over the plugin defaults.
+
 Optional setup steps:
 
 ```bash

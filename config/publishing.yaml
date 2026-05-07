@@ -1,0 +1,28 @@
+# Content Editor — publishing settings
+#
+# Copy this file to one of the resolution paths to override the plugin defaults:
+#   - $WORKSPACE/.content-editor/publishing.yaml         (per-workspace, gitignored)
+#   - ~/.claude/content-editor/publishing.yaml           (user-wide fallback)
+#
+# Resolution order is defined in commands/manifest.yaml under `publishing`.
+#
+# `provider` selects which directory under providers/ the publish/analytics
+# skills shell out to. Set to `none` (or omit the file entirely) to disable
+# automated publishing — the rest of the plugin still works.
+
+provider: taplio
+
+# Default schedule applied to generated batches. The publish skill passes
+# this through to providers verbatim.
+schedule:
+  default_time: "09:15"
+  timezone: "UTC"
+  working_days: [Mon, Tue, Wed, Thu, Fri]
+
+# Provider-specific block. The key must match `provider` above.
+# Each provider documents its own keys in providers/<name>/README.md.
+taplio:
+  # Path to the Playwright session file. Resolved against $WORKSPACE.
+  session_file: ".content-editor/taplio-session.json"
+  # Where to dump debug screenshots when scheduling fails.
+  screenshots_dir: ".content-editor/taplio-screenshots"
