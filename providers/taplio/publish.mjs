@@ -210,18 +210,66 @@ function parsePosts(md) {
 // intercept clicks. Best-effort dismissal: Escape, then close-button clicks.
 // ---------------------------------------------------------------------------
 
-// Taplio renders a Pro-plan upsell modal ~5-8 seconds after dashboard load.
-// The close button is `button[aria-label="Close"]` inside `.chakra-modal__content`.
-// We wait up to 12s for it to appear; if it does, click it. If it never shows
-// (some sessions skip the upsell), proceed without action.
+// Taplio renders a blocking modal ~5-8 seconds after dashboard load. At least
+// two variants exist and they need different affordances:
+//   - Pro-plan upsell — closed via `button[aria-label="Close"]` /
+//     `.chakra-modal__close-btn` inside `.chakra-modal__content`.
+//   - "Your AI Settings just got an upgrade" onboarding prompt — has NO close
+//     button and offers only "Set up now" / "Maybe later". Escape does not
+//     close it either (verified), so waiting on a close button silently times
+//     out and the overlay then intercepts every subsequent click.
+// Wait for ANY dialog, then dismiss it with whichever control it exposes.
+// Loop, because dismissing one modal can reveal another. Only ever click an
+// explicit decline control — never the affirmative action.
+const DISMISS_TEXTS = ['Maybe later', 'Not now', 'No thanks', 'Dismiss', 'Skip'];
+
 async function dismissBlockingModals(page) {
+  const dialogs = () => page.locator('.chakra-modal__content, [role="dialog"]');
+
   try {
-    const closeBtn = page.locator('.chakra-modal__close-btn, button[aria-label="Close"]').first();
-    await closeBtn.waitFor({ state: 'visible', timeout: 12000 });
-    await closeBtn.click({ timeout: 3000, force: true });
-    await page.waitForTimeout(800);
+    await dialogs().first().waitFor({ state: 'visible', timeout: 12000 });
   } catch {
-    // Modal never appeared, or already dismissed — fine.
+    return; // No modal appeared — some sessions skip it entirely.
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (await dialogs().count() === 0) return;
+    const dialog = dialogs().first();
+    let dismissed = false;
+
+    // Buttons are scoped to the open dialog so a decline-word match can never
+    // hit an unrelated control on the page behind the overlay.
+    const closeBtn = dialog
+      .locator('.chakra-modal__close-btn, button[aria-label="Close"]')
+      .first();
+    if (await closeBtn.count() > 0) {
+      try {
+        await closeBtn.click({ timeout: 3000, force: true });
+        dismissed = true;
+      } catch {}
+    }
+
+    if (!dismissed) {
+      for (const text of DISMISS_TEXTS) {
+        const btn = dialog.locator(`button:has-text("${text}")`).first();
+        if (await btn.count() === 0) continue;
+        try {
+          await btn.click({ timeout: 3000, force: true });
+          dismissed = true;
+          break;
+        } catch {}
+      }
+    }
+
+    if (!dismissed) {
+      // Unknown modal shape. Report it so the next failure is diagnosable
+      // instead of surfacing as an opaque 30s click timeout downstream.
+      const labels = await dialog.locator('button').allTextContents().catch(() => []);
+      log(`   ⚠️  undismissable modal, buttons: ${JSON.stringify(labels)}`);
+      return;
+    }
+
+    await page.waitForTimeout(800);
   }
 }
 
